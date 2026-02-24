@@ -1,0 +1,9 @@
+[submodule "jobup_be"]
+	path = jobup_be
+	url = https://github.com/VuongDuc12/jobup_be.git
+[submodule "jobup_admin"]
+	path = jobup_admin
+	url = https://github.com/VuongDuc12/jobup_fe
+[submodule "jobup_client"]
+	path = jobup_client
+	url = https://github.com/VuongDuc12/Jobup

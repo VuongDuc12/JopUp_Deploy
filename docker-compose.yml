@@ -1,0 +1,174 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# JOPUP - Docker Compose Production
+# Domain:
+#   ducdev04.pro.vn          → Landing (Next.js)
+#   admin.ducdev04.pro.vn    → Admin Panel (React/Vite)
+#   api.ducdev04.pro.vn      → Backend API (.NET 8)
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ─── Infrastructure ─────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: jopup_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       ${POSTGRES_DB}
+      POSTGRES_USER:     ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - jopup_internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: jopup_redis
+    restart: unless-stopped
+    command: ["redis-server", "--save", "", "--appendonly", "no", "--maxmemory", "256mb", "--maxmemory-policy", "allkeys-lru"]
+    volumes:
+      - redis_data:/data
+    networks:
+      - jopup_internal
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── Backend API (.NET 8) ────────────────────────────────────────────────────
+  api:
+    build:
+      context: ./jobup_be
+      dockerfile: Dockerfile
+    container_name: jopup_api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      # Kestrel bind all interfaces
+      Kestrel__Endpoints__Http__Url: "http://0.0.0.0:9000"
+
+      # Database
+      ConnectionStrings__DefaultConnection: >-
+        Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+
+      # JWT
+      JwtSettings__Key:          ${JWT_KEY}
+      JwtSettings__ExpiredHours: ${JWT_EXPIRED_HOURS}
+      JwtSettings__Issuer:       ${JWT_ISSUER}
+      JwtSettings__Audience:     ${JWT_AUDIENCE}
+
+      # App URLs
+      AppSettings__FeBaseUrl: ${FE_BASE_URL}
+      AppSettings__BeBaseUrl: ${BE_BASE_URL}
+
+      # SMTP
+      SmtpConfig__Host:      ${SMTP_HOST}
+      SmtpConfig__Port:      ${SMTP_PORT}
+      SmtpConfig__EnableSsl: "true"
+      SmtpConfig__UserName:  ${SMTP_USERNAME}
+      SmtpConfig__Password:  ${SMTP_PASSWORD}
+
+      # Redis
+      Redis__Connection: "redis:6379"
+
+      # ASP.NET ENV
+      ASPNETCORE_ENVIRONMENT: Production
+    volumes:
+      - api_storage:/app/storage
+      - api_logs:/app/logs
+    networks:
+      - jopup_internal
+
+  # ─── Admin Panel (React + Vite → Nginx static) ──────────────────────────────
+  admin:
+    build:
+      context: ./jobup_admin
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${BE_BASE_URL}
+    container_name: jopup_admin
+    restart: unless-stopped
+    networks:
+      - jopup_internal
+
+  # ─── Landing Page (Next.js) ──────────────────────────────────────────────────
+  landing:
+    build:
+      context: ./jobup_client/landing
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${BE_BASE_URL}
+    container_name: jopup_landing
+    restart: unless-stopped
+    environment:
+      NODE_ENV:              production
+      NEXT_PUBLIC_API_URL:   ${BE_BASE_URL}
+    networks:
+      - jopup_internal
+
+  # ─── Nginx Reverse Proxy ─────────────────────────────────────────────────────
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: jopup_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      # SSL certs (mount sau khi có cert từ certbot)
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      # Certbot webroot challenge
+      - certbot_www:/var/www/certbot:ro
+    depends_on:
+      - api
+      - admin
+      - landing
+    networks:
+      - jopup_internal
+
+  # ─── Certbot (Let's Encrypt SSL) ─────────────────────────────────────────────
+  # Chạy 1 lần để lấy cert: docker compose run --rm certbot
+  certbot:
+    image: certbot/certbot:latest
+    container_name: jopup_certbot
+    volumes:
+      - ./nginx/ssl:/etc/letsencrypt
+      - certbot_www:/var/www/certbot
+    entrypoint: >
+      certbot certonly --webroot
+      --webroot-path=/var/www/certbot
+      --email ${CERTBOT_EMAIL}
+      --agree-tos --no-eff-email
+      -d ${DOMAIN}
+      -d www.${DOMAIN}
+      -d admin.${DOMAIN}
+      -d api.${DOMAIN}
+    profiles:
+      - certbot
+
+# ─── Networks ──────────────────────────────────────────────────────────────────
+networks:
+  jopup_internal:
+    driver: bridge
+
+# ─── Volumes ───────────────────────────────────────────────────────────────────
+volumes:
+  postgres_data:
+  redis_data:
+  api_storage:
+  api_logs:
+  certbot_www:

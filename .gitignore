@@ -1,0 +1,13 @@
+# Env secrets
+.env
+
+# Nginx SSL certs (quản lý trên server, không commit)
+nginx/ssl/
+
+# Logs
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
