@@ -1,9 +1,9 @@
 # ─────────────────────────────────────────────────────────────────────────────
 # JOPUP - Docker Compose Production
 # Domain:
-#   ducdev04.pro.vn          → Landing (Next.js)
-#   admin.ducdev04.pro.vn    → Admin Panel (React/Vite)
-#   api.ducdev04.pro.vn      → Backend API (.NET 8)
+#   jobuptest.ducdev04.pro.vn          → Landing (Next.js)
+#   admin-jobuptest.ducdev04.pro.vn    → Admin Panel (React/Vite)
+#   api-jobuptest.ducdev04.pro.vn      → Backend API (.NET 8)
 # ─────────────────────────────────────────────────────────────────────────────
 
 services:
@@ -90,6 +90,12 @@ services:
       - api_logs:/app/logs
     networks:
       - jopup_internal
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:9000/swagger/index.html || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
 
   # ─── Admin Panel (React + Vite → Nginx static) ──────────────────────────────
   admin:
@@ -155,8 +161,8 @@ services:
       --agree-tos --no-eff-email
       -d ${DOMAIN}
       -d www.${DOMAIN}
-      -d admin.${DOMAIN}
-      -d api.${DOMAIN}
+      -d admin-${DOMAIN}
+      -d api-${DOMAIN}
     profiles:
       - certbot
 
