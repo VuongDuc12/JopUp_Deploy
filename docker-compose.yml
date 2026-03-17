@@ -121,6 +121,8 @@ services:
     environment:
       NODE_ENV:              production
       NEXT_PUBLIC_API_URL:   ${BE_BASE_URL}
+      NEXT_PUBLIC_REVALIDATE_TIME: ${NEXT_PUBLIC_REVALIDATE_TIME}
+      NEXT_PUBLIC_GA4_MEASUREMENT_ID: ${NEXT_PUBLIC_GA4_MEASUREMENT_ID}
     networks:
       - jopup_internal
 
