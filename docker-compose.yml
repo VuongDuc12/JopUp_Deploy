@@ -79,6 +79,8 @@ services:
       SmtpConfig__EnableSsl: "true"
       SmtpConfig__UserName:  ${SMTP_USERNAME}
       SmtpConfig__Password:  ${SMTP_PASSWORD}
+      SmtpConfig__SenderName: ${SENDER_NAME}
+      SmtpConfig__SenderEmail: ${SENDER_EMAIL}
 
       # Redis
       Redis__Connection: "redis:6379"
