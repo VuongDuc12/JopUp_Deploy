@@ -12,9 +12,9 @@ Internet
 │  VPS (Ubuntu 22.04)                                              │
 │                                                                  │
 │  Nginx (port 80 → redirect HTTPS, port 443 → SSL termination)   │
-│     ├── jobuptest.ducdev04.pro.vn        → landing:3000          │
-│     ├── admin-jobuptest.ducdev04.pro.vn  → admin:80              │
-│     └── api-jobuptest.ducdev04.pro.vn    → api:9000              │
+│     ├── jobup.vn        → landing:3000          │
+│     ├── admin-jobup.vn  → admin:80              │
+│     └── api-jobup.vn    → api:9000              │
 │                                                                  │
 │  [landing]   Next.js standalone    (internal :3000)              │
 │  [admin]     React/Vite → Nginx   (internal :80)                │
@@ -98,17 +98,17 @@ Truy cập bảng quản lý domain (ví dụ: Cloudflare, Namecheap, v.v.) và 
 
 | Type | Name | Value | TTL |
 |------|------|-------|-----|
-| A | `jobuptest.ducdev04.pro.vn` | `<IP_VPS>` | Auto |
-| A | `www.jobuptest.ducdev04.pro.vn` | `<IP_VPS>` | Auto |
-| A | `admin-jobuptest.ducdev04.pro.vn` | `<IP_VPS>` | Auto |
-| A | `api-jobuptest.ducdev04.pro.vn` | `<IP_VPS>` | Auto |
+| A | `jobup.vn` | `<IP_VPS>` | Auto |
+| A | `www.jobup.vn` | `<IP_VPS>` | Auto |
+| A | `admin-jobup.vn` | `<IP_VPS>` | Auto |
+| A | `api-jobup.vn` | `<IP_VPS>` | Auto |
 
 > **Quan trọng**: Chờ DNS propagate (5-30 phút) trước khi chạy certbot. Kiểm tra:
 > ```bash
 > # Kiểm tra DNS đã trỏ đúng chưa
-> dig +short jobuptest.ducdev04.pro.vn
-> dig +short admin-jobuptest.ducdev04.pro.vn
-> dig +short api-jobuptest.ducdev04.pro.vn
+> dig +short jobup.vn
+> dig +short admin-jobup.vn
+> dig +short api-jobup.vn
 > # Phải trả về IP VPS
 > ```
 
@@ -138,11 +138,11 @@ nano .env
 
 ```env
 # ─── Domain ────────────────────────────────────────────────────────────────────
-DOMAIN=jobuptest.ducdev04.pro.vn
+DOMAIN=jobup.vn
 # ⚠️ Phase 1: Dùng http:// trước (chưa có SSL cert)
 # ⚠️ Phase 2: Đổi thành https:// sau khi certbot thành công, rồi rebuild admin + landing
-FE_BASE_URL=http://jobuptest.ducdev04.pro.vn
-BE_BASE_URL=http://api-jobuptest.ducdev04.pro.vn
+FE_BASE_URL=http://jobup.vn
+BE_BASE_URL=http://api-jobup.vn
 
 # ─── PostgreSQL ────────────────────────────────────────────────────────────────
 POSTGRES_DB=jopup_db
@@ -238,17 +238,17 @@ docker inspect jopup_api | grep -A 5 "State"
 
 ```bash
 # Từ VPS
-curl -I http://jobuptest.ducdev04.pro.vn
+curl -I http://jobup.vn
 # Mong đợi: HTTP/1.1 200 OK
 
-curl -I http://admin-jobuptest.ducdev04.pro.vn
+curl -I http://admin-jobup.vn
 # Mong đợi: HTTP/1.1 200 OK
 
-curl -I http://api-jobuptest.ducdev04.pro.vn/swagger/index.html
+curl -I http://api-jobup.vn/swagger/index.html
 # Mong đợi: HTTP/1.1 200 OK
 
 # Test API endpoint
-curl http://api-jobuptest.ducdev04.pro.vn/health/redis
+curl http://api-jobup.vn/health/redis
 # Mong đợi: "Healthy"
 ```
 
@@ -264,8 +264,8 @@ docker compose --profile certbot run --rm certbot
 **Kết quả thành công:**
 ```
 Successfully received certificate.
-Certificate is saved at: /etc/letsencrypt/live/jobuptest.ducdev04.pro.vn/fullchain.pem
-Key is saved at:         /etc/letsencrypt/live/jobuptest.ducdev04.pro.vn/privkey.pem
+Certificate is saved at: /etc/letsencrypt/live/jobup.vn/fullchain.pem
+Key is saved at:         /etc/letsencrypt/live/jobup.vn/privkey.pem
 ```
 
 **Nếu certbot thất bại:**
@@ -279,7 +279,7 @@ Key is saved at:         /etc/letsencrypt/live/jobuptest.ducdev04.pro.vn/privkey
 
 **Verify cert tồn tại:**
 ```bash
-ls -la nginx/ssl/live/jobuptest.ducdev04.pro.vn/
+ls -la nginx/ssl/live/jobup.vn/
 # Phải thấy: fullchain.pem, privkey.pem, cert.pem, chain.pem
 ```
 
@@ -318,8 +318,8 @@ Verify:
 ```bash
 grep '_URL=' .env
 # Mong đợi:
-# FE_BASE_URL=https://jobuptest.ducdev04.pro.vn
-# BE_BASE_URL=https://api-jobuptest.ducdev04.pro.vn
+# FE_BASE_URL=https://jobup.vn
+# BE_BASE_URL=https://api-jobup.vn
 ```
 
 ### 4.3. Rebuild admin + landing + reload Nginx
@@ -336,30 +336,30 @@ docker compose exec nginx nginx -s reload
 
 ```bash
 # Test HTTPS
-curl -I https://jobuptest.ducdev04.pro.vn
+curl -I https://jobup.vn
 # Mong đợi: HTTP/2 200
 
-curl -I https://admin-jobuptest.ducdev04.pro.vn
+curl -I https://admin-jobup.vn
 # Mong đợi: HTTP/2 200
 
-curl -I https://api-jobuptest.ducdev04.pro.vn/swagger/index.html
+curl -I https://api-jobup.vn/swagger/index.html
 # Mong đợi: HTTP/2 200
 
 # Test HTTP → HTTPS redirect
-curl -I http://jobuptest.ducdev04.pro.vn
+curl -I http://jobup.vn
 # Mong đợi: HTTP/1.1 301 Moved Permanently
-#           Location: https://jobuptest.ducdev04.pro.vn/
+#           Location: https://jobup.vn/
 
 # Test SSL cert
-curl -vI https://jobuptest.ducdev04.pro.vn 2>&1 | grep "subject\|expire"
+curl -vI https://jobup.vn 2>&1 | grep "subject\|expire"
 # Mong đợi: subject và expire date hợp lệ
 ```
 
 ### 4.5. Verify trên trình duyệt
 
-1. **Landing**: Mở `https://jobuptest.ducdev04.pro.vn` → Hiển thị trang chủ, có khóa xanh SSL
-2. **Admin**: Mở `https://admin-jobuptest.ducdev04.pro.vn` → Hiển thị trang login admin
-3. **API Swagger**: Mở `https://api-jobuptest.ducdev04.pro.vn/swagger` → Hiển thị Swagger UI
+1. **Landing**: Mở `https://jobup.vn` → Hiển thị trang chủ, có khóa xanh SSL
+2. **Admin**: Mở `https://admin-jobup.vn` → Hiển thị trang login admin
+3. **API Swagger**: Mở `https://api-jobup.vn/swagger` → Hiển thị Swagger UI
 4. **Admin → API**: Login thử trên admin → không bị lỗi CORS, không bị Mixed Content
 
 ---
@@ -514,9 +514,9 @@ docker compose exec nginx tail -f /var/log/nginx/error.log
 
 | Biến | Mô tả | Ví dụ |
 |------|--------|-------|
-| `DOMAIN` | Domain chính | `jobuptest.ducdev04.pro.vn` |
-| `FE_BASE_URL` | URL landing (HTTPS) | `https://jobuptest.ducdev04.pro.vn` |
-| `BE_BASE_URL` | URL API (HTTPS) | `https://api-jobuptest.ducdev04.pro.vn` |
+| `DOMAIN` | Domain chính | `jobup.vn` |
+| `FE_BASE_URL` | URL landing (HTTPS) | `https://jobup.vn` |
+| `BE_BASE_URL` | URL API (HTTPS) | `https://api-jobup.vn` |
 | `POSTGRES_DB` | Tên database | `jopup_db` |
 | `POSTGRES_USER` | DB username | `jopup_user` |
 | `POSTGRES_PASSWORD` | DB password (mạnh!) | `openssl rand -base64 24` |

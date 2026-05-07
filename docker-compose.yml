@@ -1,9 +1,9 @@
 # ─────────────────────────────────────────────────────────────────────────────
 # JOPUP - Docker Compose Production
 # Domain:
-#   jobuptest.ducdev04.pro.vn          → Landing (Next.js)
-#   admin-jobuptest.ducdev04.pro.vn    → Admin Panel (React/Vite)
-#   api-jobuptest.ducdev04.pro.vn      → Backend API (.NET 8)
+#   jobup.vn          → Landing (Next.js)
+#   admin-jobup.vn    → Admin Panel (React/Vite)
+#   api-jobup.vn      → Backend API (.NET 8)
 # ─────────────────────────────────────────────────────────────────────────────
 
 services:
