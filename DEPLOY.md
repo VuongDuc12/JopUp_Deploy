@@ -13,8 +13,8 @@ Internet
 │                                                                  │
 │  Nginx (port 80 → redirect HTTPS, port 443 → SSL termination)   │
 │     ├── jobup.vn        → landing:3000          │
-│     ├── admin-jobup.vn  → admin:80              │
-│     └── api-jobup.vn    → api:9000              │
+│     ├── admin.jobup.vn  → admin:80              │
+│     └── api.jobup.vn    → api:9000              │
 │                                                                  │
 │  [landing]   Next.js standalone    (internal :3000)              │
 │  [admin]     React/Vite → Nginx   (internal :80)                │
@@ -100,15 +100,15 @@ Truy cập bảng quản lý domain (ví dụ: Cloudflare, Namecheap, v.v.) và 
 |------|------|-------|-----|
 | A | `jobup.vn` | `<IP_VPS>` | Auto |
 | A | `www.jobup.vn` | `<IP_VPS>` | Auto |
-| A | `admin-jobup.vn` | `<IP_VPS>` | Auto |
-| A | `api-jobup.vn` | `<IP_VPS>` | Auto |
+| A | `admin.jobup.vn` | `<IP_VPS>` | Auto |
+| A | `api.jobup.vn` | `<IP_VPS>` | Auto |
 
 > **Quan trọng**: Chờ DNS propagate (5-30 phút) trước khi chạy certbot. Kiểm tra:
 > ```bash
 > # Kiểm tra DNS đã trỏ đúng chưa
 > dig +short jobup.vn
-> dig +short admin-jobup.vn
-> dig +short api-jobup.vn
+> dig +short admin.jobup.vn
+> dig +short api.jobup.vn
 > # Phải trả về IP VPS
 > ```
 
@@ -142,7 +142,7 @@ DOMAIN=jobup.vn
 # ⚠️ Phase 1: Dùng http:// trước (chưa có SSL cert)
 # ⚠️ Phase 2: Đổi thành https:// sau khi certbot thành công, rồi rebuild admin + landing
 FE_BASE_URL=http://jobup.vn
-BE_BASE_URL=http://api-jobup.vn
+BE_BASE_URL=http://api.jobup.vn
 
 # ─── PostgreSQL ────────────────────────────────────────────────────────────────
 POSTGRES_DB=jopup_db
@@ -241,14 +241,14 @@ docker inspect jopup_api | grep -A 5 "State"
 curl -I http://jobup.vn
 # Mong đợi: HTTP/1.1 200 OK
 
-curl -I http://admin-jobup.vn
+curl -I http://admin.jobup.vn
 # Mong đợi: HTTP/1.1 200 OK
 
-curl -I http://api-jobup.vn/swagger/index.html
+curl -I http://api.jobup.vn/swagger/index.html
 # Mong đợi: HTTP/1.1 200 OK
 
 # Test API endpoint
-curl http://api-jobup.vn/health/redis
+curl http://api.jobup.vn/health/redis
 # Mong đợi: "Healthy"
 ```
 
@@ -319,7 +319,7 @@ Verify:
 grep '_URL=' .env
 # Mong đợi:
 # FE_BASE_URL=https://jobup.vn
-# BE_BASE_URL=https://api-jobup.vn
+# BE_BASE_URL=https://api.jobup.vn
 ```
 
 ### 4.3. Rebuild admin + landing + reload Nginx
@@ -339,10 +339,10 @@ docker compose exec nginx nginx -s reload
 curl -I https://jobup.vn
 # Mong đợi: HTTP/2 200
 
-curl -I https://admin-jobup.vn
+curl -I https://admin.jobup.vn
 # Mong đợi: HTTP/2 200
 
-curl -I https://api-jobup.vn/swagger/index.html
+curl -I https://api.jobup.vn/swagger/index.html
 # Mong đợi: HTTP/2 200
 
 # Test HTTP → HTTPS redirect
@@ -358,8 +358,8 @@ curl -vI https://jobup.vn 2>&1 | grep "subject\|expire"
 ### 4.5. Verify trên trình duyệt
 
 1. **Landing**: Mở `https://jobup.vn` → Hiển thị trang chủ, có khóa xanh SSL
-2. **Admin**: Mở `https://admin-jobup.vn` → Hiển thị trang login admin
-3. **API Swagger**: Mở `https://api-jobup.vn/swagger` → Hiển thị Swagger UI
+2. **Admin**: Mở `https://admin.jobup.vn` → Hiển thị trang login admin
+3. **API Swagger**: Mở `https://api.jobup.vn/swagger` → Hiển thị Swagger UI
 4. **Admin → API**: Login thử trên admin → không bị lỗi CORS, không bị Mixed Content
 
 ---
@@ -516,7 +516,7 @@ docker compose exec nginx tail -f /var/log/nginx/error.log
 |------|--------|-------|
 | `DOMAIN` | Domain chính | `jobup.vn` |
 | `FE_BASE_URL` | URL landing (HTTPS) | `https://jobup.vn` |
-| `BE_BASE_URL` | URL API (HTTPS) | `https://api-jobup.vn` |
+| `BE_BASE_URL` | URL API (HTTPS) | `https://api.jobup.vn` |
 | `POSTGRES_DB` | Tên database | `jopup_db` |
 | `POSTGRES_USER` | DB username | `jopup_user` |
 | `POSTGRES_PASSWORD` | DB password (mạnh!) | `openssl rand -base64 24` |

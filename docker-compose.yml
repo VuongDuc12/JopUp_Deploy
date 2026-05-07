@@ -2,8 +2,8 @@
 # JOPUP - Docker Compose Production
 # Domain:
 #   jobup.vn          → Landing (Next.js)
-#   admin-jobup.vn    → Admin Panel (React/Vite)
-#   api-jobup.vn      → Backend API (.NET 8)
+#   admin.jobup.vn    → Admin Panel (React/Vite)
+#   api.jobup.vn      → Backend API (.NET 8)
 # ─────────────────────────────────────────────────────────────────────────────
 
 services:
