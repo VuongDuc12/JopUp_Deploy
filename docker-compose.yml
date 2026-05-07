@@ -165,8 +165,8 @@ services:
       --agree-tos --no-eff-email
       -d ${DOMAIN}
       -d www.${DOMAIN}
-      -d admin-${DOMAIN}
-      -d api-${DOMAIN}
+      -d admin.${DOMAIN}
+      -d api.${DOMAIN}
     profiles:
       - certbot
 
